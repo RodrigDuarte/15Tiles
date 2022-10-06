@@ -75,16 +75,20 @@ BOARD generate_board(int height, int width) {
     return board;
 }
 
+// Generate solution but 0 has to be on the end
 BOARD generate_solution(BOARD board) {
-    BOARD solution = copy_board(board);
+    BOARD solution = create_board(board->height, board->width);
 
-    for (int i = 0; i < board->height * board->width; i++) {
-        int row = i / board->width;
-        int col = i % board->width;
-
-        solution->matrix[row][col] = i;
-        solution->array[row * board->width + col] = i;
+    int counter = 1;
+    for (int i = 0; i < board->height; i++) {
+        for (int j = 0; j < board->width; j++) {
+            solution->matrix[i][j] = counter;
+            solution->array[i * board->width + j] = counter;
+            counter++;
+        }
     }
+
+    solution->matrix[board->height - 1][board->width - 1] = 0;
 
     return solution;
 }
@@ -178,4 +182,17 @@ ARRAY successors(BOARD board) {
     }
 
     return succ;
+}
+
+int evaluate_board(BOARD board, BOARD solution) {
+    int counter = 0;
+    for (int i = 0; i < board->height; i++) {
+        for (int j = 0; j < board->width; j++) {
+            if (board->matrix[i][j] == solution->matrix[i][j]) {
+                counter++;
+            }
+        }
+    }
+
+    return counter;
 }

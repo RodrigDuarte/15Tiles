@@ -1,3 +1,7 @@
+#ifndef ARRAY_UTILS_H
+#define ARRAY_UTILS_H
+
+
 /* FILE: array_utils.h
  * AUTHORS: Rodrigo Duarte
  * DESCRIPTION: This file contains the implementation of dynamic arrays.
@@ -93,7 +97,7 @@ ARRAY remove_array(ARRAY array, int index) {
 ARRAY clear_array(ARRAY array) {
     int step = array->step;
 
-    destroy_array(array);
+    array = destroy_array(array);
 
     array = create_array(step);
 
@@ -113,3 +117,5 @@ ARRAY destroy_array(ARRAY array) {
 
     return array;
 }
+
+#endif // ARRAY_UTILS_H

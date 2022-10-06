@@ -4,24 +4,51 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include "array_utils.h"
-#include "tree_utils.h"
+#include "includes/array_utils.h"
+#include "includes/tree_utils.h"
+#include "includes/list_utils.h"
 #include "board.h"
 
 BOARD solution;
 
-void solution_tree(TREE tree, BOARD board, int level) {
+void solution_tree(TREE tree_head, TREE tree, BOARD board, int level) {
     if (level <= 0 || tree == NULL || board == NULL) { return; }
 
     ARRAY succ = successors(board);
     for (int i = 0; i < succ->size; i++) {
+        if (find_node(tree_head, succ->data[i], compare_boards)) {
+            //printf("Found a duplicate board! Skipping...\n");
+            continue;
+        }
+        
         BOARD succ_board = (BOARD) succ->data[i];
         TREE child = create_tree(succ_board);
         tree->children = add_array(tree->children, (void *) child);
-        solution_tree(child, succ_board, level - 1);
+        solution_tree(tree_head, child, succ_board, level - 1);
     }
 
     free(succ);
+}
+
+BOARD find_best_board(TREE tree) {
+    if (tree == NULL) { return NULL; }
+
+    BOARD best_board = tree->data;
+    int best_score = evaluate_board(best_board, solution);
+
+    for (int i = 0; i < tree->children->size; i++) {
+        BOARD child_board = find_best_board(tree->children->data[i]);
+        if (child_board == NULL) { continue; }
+        else {
+            int child_score = evaluate_board(child_board, solution);
+            if (child_score > best_score) {
+                best_score = child_score;
+                best_board = child_board;
+            }
+        }
+    }
+
+    return best_board;
 }
 
 void print_tree(TREE tree, int level) {
@@ -38,58 +65,42 @@ void print_tree(TREE tree, int level) {
 int main(void) {
     srand(time(NULL));
 
-    BOARD board = generate_board(2, 2);
+    BOARD Test = generate_board(3, 3);
+    int Test_board[3][3] = {
+        {8, 3, 5},
+        {7, 0, 1},
+        {2, 4, 6}
+    };
+
+    for (int i = 0; i < Test->height; i++) {
+        for (int j = 0; j < Test->width; j++) {
+            Test->matrix[i][j] = Test_board[i][j];
+            Test->array[i * Test->width + j] = Test_board[i][j];
+        }
+    }
+
+    BOARD board = generate_board(3, 3);
     solution = generate_solution(board);
-
-    TREE tree = create_tree(board);
-    solution_tree(tree, board, 2);
-    print_tree(tree, 0);
-
-    /*
-    printf("Is a valid board: %s\n", is_valid(board) ? "true" : "false");
+    printf("Original board:\n");
     print_board(board);
 
+    
+    int depth = 10;
 
-    printf("Printing successrors:\n");
-    ARRAY succ = successors(board);
-    for (int i = 0; i < succ->size; i++) {
-        print_board(succ->data[i]);
-        printf("Is a valid board: %s\n", is_valid(board) ? "true" : "false");
-        printf("\n");
+    BOARD best_board = board;
+    while (compare_boards(best_board,solution) == false) {
+        TREE tree = create_tree(best_board);
+        solution_tree(tree, tree, best_board, depth);
+        printf("Number of boards generated: %d | Depth: %2d\n", count_nodes(tree), depth);
+        best_board = find_best_board(tree);
+        depth++;
     }
-    
-    TREE tree = create_tree(board);
-    ARRAY succ = successors(board);
-    printf("Succ size: %d\n", succ->size);
-    for (int i = 0; i < succ->size; i++) {
-        add_child(tree, create_tree(succ->data[i]));
-    }
-    
-    printf("Tree size: %d\n", tree->children->size);
-    for (int i = 0; i < tree->children->size; i++) {
-        TREE child = tree->children->data[i];
-        ARRAY succ_in = successors((BOARD) child->data);
-        for (int j = 0; j < succ_in->size; j++) {
-            add_child(child, create_tree(succ_in->data[j]));
-        }
-    }
-    
-    printf("Root of tree\n");
-    print_board(tree->data);
-    for (int i = 0; i < tree->children->size; i++) {
-        TREE child = tree->children->data[i];
-        printf("Children %d of root\n", i);
-        print_board((BOARD) child->data);
-        for (int j = 0; j < child->children->size; j++) {
-            printf("Children %d of child %d\n", j, i);
-            TREE child_in = child->children->data[j];
-            print_board((BOARD) child_in->data);
-        }
-    }
-    */
-    
-    destroy_board(board);
-    destroy_tree(tree);
+
+    printf("Solution found!\n");
+    print_board(best_board);
+
+    //destroy_board(board);
+    //destroy_tree(tree);
 
     return 0;
 }
