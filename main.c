@@ -41,7 +41,7 @@ BOARD find_best_board(TREE tree) {
         if (child_board == NULL) { continue; }
         else {
             int child_score = evaluate_board(child_board, solution);
-            if (child_score > best_score) {
+            if (child_score >= best_score) {
                 best_score = child_score;
                 best_board = child_board;
             }
@@ -82,12 +82,12 @@ int main(void) {
     BOARD board = generate_board(3, 3);
     solution = generate_solution(board);
     printf("Original board:\n");
-    print_board(board);
+    print_board(Test);
 
     
     int depth = 10;
 
-    BOARD best_board = board;
+    BOARD best_board = Test;
     while (compare_boards(best_board,solution) == false) {
         TREE tree = create_tree(best_board);
         solution_tree(tree, tree, best_board, depth);
